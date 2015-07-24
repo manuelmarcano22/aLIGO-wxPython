@@ -7,6 +7,6 @@ Gallery
 
 **Multicolor** inspired by tip_
 
+![alt text](screenshots/screenshot.png "Description goes here")
 
 
-.. image:: http://dotshare.it/public/images/uploads/650.png
