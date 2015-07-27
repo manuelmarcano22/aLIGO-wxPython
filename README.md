@@ -9,4 +9,6 @@ Gallery
 
 ![alt text](screenshots/screenshot.png "Description goes here")
 
+Prerequisite packages
+=======
 
