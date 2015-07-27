@@ -11,4 +11,5 @@ Gallery
 
 Prerequisite packages
 =======
+* **numpy**[http://www.numpy.org/]
 
