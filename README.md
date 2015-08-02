@@ -18,4 +18,4 @@ Gallery
 
 **Screen Shot:**
 
-![Alt text](https://cloud.githubusercontent.com/assets/8272801/9027503/824c5e90-394f-11e5-81b8-dcbfdc055804.png"Description goes here")
+![Alt text](https://cloud.githubusercontent.com/assets/8272801/9027503/824c5e90-394f-11e5-81b8-dcbfdc055804.png)
