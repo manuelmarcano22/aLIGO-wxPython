@@ -2,8 +2,8 @@
 import lal
 import lalsimulation
 import numpy as np
-#import matplotlib.pyplot as plt
-#from mpl_toolkits.basemap import Basemap
+import matplotlib.pyplot as plt
+from mpl_toolkits.basemap import Basemap
 #from scipy import interpolate
 
 
@@ -213,7 +213,7 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #det =0
 #fmaxhcode = 5000000.
 #massdet = 80.
-#ltotal =  100*1.87 # 1.6#1.87# 2.14 #1.87   # 2.1
+#ltotal =  100*2.14 # 1.6#1.87# 2.14 #1.87   # 2.1
 #lsec = 100*1.1 #0.6
 #
 #snr1, h1, asd1, freqrange1, freqrangetheory, timee1, seis1, coat1, susp1, fGWI ,idx,idx2= \
@@ -224,7 +224,7 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #subplot1 = figure.add_subplot(111)
 #
 #inset_ax = figure.add_axes([0.55,0.04,0.45,0.3] )
-#mapita = Basemap(projection='moll',lon_0 = 10,resolution=None)
+#mapita = Basemap(projection='moll',lon_0 = 10)
 ##, projection =ccrs.PlateCarree())
 ####
 #subplot1.set_yscale('log')
@@ -262,6 +262,7 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #subplot1.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
 #        'o-', label='Effective Induced Strain')
 #
+#subplot1.legend(loc='best', fancybox=True, framealpha=0.5)
 #
 #try:
 #    subplot1.scatter(freqrangetheory[idx],h1[idx]*np.sqrt(freqrangetheory[idx]),c='r',s=500,marker='*')
@@ -273,33 +274,86 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #x,y = mapita(ra,dec)
 #mapita.scatter(x,y,color='r')
 #mapita.bluemarble(scale=.2)
-##mapita.shadedrelief()
+#inset_ax = figure.add_axes([0.55,0.04,0.45,0.3] )
 #
-##scatter = inset_ax.scatter(ra, dec,c='r',transform=ccrs.PlateCarree())
-##scatter = inset_ax.scatter(0,0,transform=ccrs.PlateCarree()) 
-##inset_ax.coastlines()
-##inset_ax.gridlines(crs=ccrs.PlateCarree())
-##        ,transform=ccrs.PlateCarree())
-##inset_ax.plot(ra,dec,transform=ccrs.PlateCarree())
+##Antenna Pathern:
+#def antenna_response( t0, ra, dec, psi, det ):
+#    gps = lal.LIGOTimeGPS( t0 )
+#    gmst_rad = lal.GreenwichMeanSiderealTime(gps)
 #
-#subplot1.legend(loc='best', fancybox=True, framealpha=0.5)
+#    # create detector-name map
+#    detMap = {'H1': lal.LALDetectorIndexLHODIFF, \
+#    'H2': lal.LALDetectorIndexLHODIFF, \
+#    'L1': lal.LALDetectorIndexLLODIFF, \
+#    'G1': lal.LALDetectorIndexGEO600DIFF, \
+#    'V1': lal.LALDetectorIndexVIRGODIFF, \
+#    'T1': lal.LALDetectorIndexTAMA300DIFF}
+#
+#    try:
+#        detector=detMap[det]
+#    except KeyError:
+#        raise ValueError, "ERROR. Key %s is not a valid detector name." % (det)
+#
+#    # get detector
+#    detval = lal.CachedDetectors[detector]
+#
+#    response = detval.response
+#
+#    # actual computation of antenna factors
+#    fp, fc = lal.ComputeDetAMResponse(response, ra, dec, psi, gmst_rad)
+#    ft = np.sqrt(fp**2 + fc**2)
+#    return ft
+#t0=900000000 #gps seconds
+#psi = 0#0.343 #(radians) Polarization angle
+#det = 'L1'
 #
 #
-##fre10 = int(np.where(freqrange1 == 10.)[0])
-##print 'at %d  is %d' %fre10 %susp1[fre10]
+#Xlista = np.arange(0,360.,1.)
+#Ylista = np.arange(-90.,90.,1.)
+#Z = np.array([])
 #
-##figure = plt.figure()
-##subplot2 = figure.add_subplot(111)
-##subplot2.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
-##        '-', label='Effective Induced Strain')
-##subplot2.set_yscale('log')
-##subplot2.set_xscale('log')
 #
-##        
-##        True , which="both", ls="-", alpha=.5)
+#for i in Ylista:
+#    for j in Xlista:
+#        ztemp = antenna_response(t0, np.radians(j),np.radians(i), psi, det ) 
+#        Z = np.append(Z,ztemp)
+#
+#X = np.arange(-180,180.,1.)
+#Y = np.arange(-90.,90.,1.)
+#X, Y = np.meshgrid(X,Y)
+#Z = np.reshape(Z, X.shape)
+###np.savetxt('L1antenna.out',Z)
+###Z = np.loadtxt('L1antenna.out')
+###Contour
+#im1 = mapita.pcolormesh(X,Y,Z,shading='flat',cmap=plt.cm.jet,latlon=True)
+#mapita.drawcoastlines()
+##
+###For back to bluemarble
+###xnot = np.zeros([5,5])
+###im1.set_array(xnot)
+###mapita.bluemarble(scale=.2)
+##
+##
+##
+##
+###, projection =ccrs.PlateCarree())
+###scatter = inset_ax.scatter(ra, dec,c='r',transform=ccrs.PlateCarree())
+###scatter = inset_ax.scatter(0,0,transform=ccrs.PlateCarree()) 
+###inset_ax.coastlines()
+###inset_ax.gridlines(crs=ccrs.PlateCarree())
+###        ,transform=ccrs.PlateCarree())
+###inset_ax.plot(ra,dec,transform=ccrs.PlateCarree())
+###fre10 = int(np.where(freqrange1 == 10.)[0])
+###print 'at %d  is %d' %fre10 %susp1[fre10]
+###figure = plt.figure()
+###subplot2 = figure.add_subplot(111)
+###subplot2.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
+###        '-', label='Effective Induced Strain')
+###subplot2.set_yscale('log')
+###subplot2.set_xscale('log')
+###        
+###        True , which="both", ls="-", alpha=.5)
 #plt.show()
+###
 ##
-##
-#
-#
-#
+
