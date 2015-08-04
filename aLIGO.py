@@ -1,9 +1,14 @@
 #!/usr/bin/env python
+
+"""
+wxPython code to compute the SNR using LIGO data for Seismic, Coating and Suspension Noise.
+Also computes the SNR for a given binary with equal masses at a particular distance. 
+Y con calendario. 
+"""
+
 import numpy as np
 import wx
-
-from sensitivity import *
-
+from sensitivity import sensitivity
 import os
 import matplotlib
 matplotlib.interactive(False)
@@ -13,8 +18,6 @@ from matplotlib.figure import Figure
 from matplotlib.pyplot import gcf, setp
 from wx.lib.pubsub import pub
 from mpl_toolkits.basemap import Basemap
-#from cartopy import config
-#import cartopy.crs as ccrs
 class Knob:
     """
     Knob - simple class with a "setKnob" method.  
@@ -33,17 +36,11 @@ class Param:
     The class allows a cleaner way to update/"feedback" to the other knobs when 
     one is being changed.  Also, this class handles min/max constraints for all
     the knobs.
-    Idea - knob list - in "set" method, knob object is passed as well
-      - the other knobs in the knob list have a "set" method which gets
-        called for the others.
-    def __init__(self, initialValue=None, lista=np.linspace(1000,60000,.1)):
     """
-    #def __init__(self, initialValue=None, lista=np.linspace(1000,60000,.1)):
     def __init__(self, initialValue=None, lista=np.linspace(0,1,1000)):
         self.minimum = round(min(lista))
         self.maximum = round(max(lista))
         self.lista = lista
-        #self.lista = [round(elem,2) for elem in lista ]
         self.value = initialValue
         self.knobs = []
         
@@ -64,6 +61,25 @@ class Param:
         value = cercano
         return value
 
+class Param2:
+#    Param pero Sin lo de Constrain
+    def __init__(self, initialValue=None, lista=np.linspace(0,1,1000)):
+        self.minimum = round(min(lista))
+        self.maximum = round(max(lista))
+        self.lista = lista
+        self.value = initialValue
+        self.knobs = []
+        
+    def attach(self, knob):
+        self.knobs += [knob]
+    
+    def set(self, value, knob=None):
+        self.value = value
+        for feedbackKnob in self.knobs:
+            if feedbackKnob != knob:
+                feedbackKnob.setKnob(self.value)
+        return self.value
+        
 class SpinerGroup(Knob):
     def __init__(self, parent, position, title, label,size,param):
         self.spinertitle = wx.StaticText(parent, label=title)
@@ -149,10 +165,6 @@ class FourierDemoFrame(wx.Frame):
         self.statusbar.SetFieldsCount(2)
         self.statusbar.SetStatusWidths([-3, -3])
         pub.subscribe(self.change_statusbar, 'changestatusbar')
-        
-#        self.statusbar.SetStatusText('klk',0)
-#        self.statusbar.SetStatusText('klk mian',1)
-
 
         self.fourierDemoWindow = FourierDemoWindow(self)
         self.frequencySliderGroup = SliderGroup(self, label='mass det (kg):', \
@@ -207,8 +219,8 @@ class FourierDemoFrame(wx.Frame):
 
     def change_statusbar(self, msg1,msg2):
         pass
-        #self.statusbar.SetStatusText(msg1,0)
-        #self.statusbar.SetStatusText(msg2,1)
+        self.statusbar.SetStatusText(msg1,0)
+        self.statusbar.SetStatusText(msg2,1)
 
 
 
@@ -227,8 +239,6 @@ class FourierDemoFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_about, m_about)
        
         menu_plot = wx.Menu()
-        
-        self.mapstatus =0.
         
         m_map = menu_plot.AppendRadioItem(-1, 'Blue Marble')
         m_antenna = menu_plot.AppendRadioItem(-1, 'Antenna Pattern')
@@ -273,13 +283,10 @@ class FourierDemoFrame(wx.Frame):
         dlg.Destroy()
 
     def on_antenna(self, event):
-        pub.sendMessage('detmapchanged' ,newmap =1. )#,newdet = 0. ,newmap = 1.)      
+        pub.sendMessage('detmapchanged' , newmap =1. )#,newdet = 0. ,newmap = 1.)      
     
     def on_map(self, event):
-        pub.sendMessage('detmapchanged' ,newmap = 0.)#,newdet =0.  ,newmap = 0.)      
-
-
-
+        pub.sendMessage('detmapchanged' , newmap = 0.)#,newdet =0.  ,newmap = 0.)      
 
 
 class RadioBoxFram(Knob):
@@ -306,35 +313,32 @@ class FourierDemoWindow(wx.Window, Knob):
         self.figure = Figure()
         self.canvas = FigureCanvasWxAgg(self, -1, self.figure)
         self.state = ''
+        
+        
+        self.aaprueba =   Param2(0., lista = np.array([0.,1.]))
+        self.aaprueba.attach(self)
+        
        
-       
-        self.mapastatus =   Param(0., lista = np.array([0.,1.])   )# minimum=100., maximum=500.)
+        self.mapastatus =   Param(0., lista = np.array([0.,1.]))   
 
        #mass det
-        self.f0 =   Param(40., lista=np.arange(40,220,20 ) )# minimum=100., maximum=500.)
+        self.f0 =   Param(40., lista=np.arange(40,220,20 ) )
         
         #L4 
         self.A = Param(0.85*100, lista = 100*np.array([0.6,0.85,1.1] ))
-        #self.A = Param(1, lista = np.array([1,2,3] ))
         
         #ltotal
         self.ltotal = Param(1.6*100, lista = 100*np.array([1.6,1.87,2.14]))
-        #self.ltotal = Param(2, lista = np.array([1,2,3] ))
 
         #FOr Mass and Distance
-        self.mass = Param(4., lista =np.arange(1,11,.1)      ) #minimum=1., maximum=5.)
-        self.dist = Param(100.,  lista=np.arange(10,10000,10)) # minimum=100., maximum=500.)
+        self.mass = Param(4., lista =np.arange(1,11,.1) )
+        self.dist = Param(100.,  lista=np.arange(10,10000,10)) 
        
 
-        self.detector = Param(0., lista=np.array([0.,1.]) )## minimum=0., maximum = 1.)
+        self.detector = Param(0., lista=np.array([0.,1.]) )
         
-        self.dec = Param(-29.4,lista=np.linspace(-90 ,90,180) )# minimum=-180., maximum=180.)
-        self.ra = Param(71.85-180, lista=np.linspace(-180,180,360) ) #  minimum=-90., maximum = 90.)
-
-        #self.dec = Param(-29.4,lista=np.linspace(-90 ,90,100) )# minimum=-180., maximum=180.)
-        #self.ra = Param(71.85-180, lista=np.linspace(-180,180,100) ) #  minimum=-90., maximum = 90.)
-        
-        
+        self.dec = Param(-29.4,lista=np.linspace(-90 ,90,180))
+        self.ra = Param(71.85-180, lista=np.linspace(-180,180,360) )
 
         self.ra.attach(self)
         self.dec.attach(self)
@@ -352,98 +356,59 @@ class FourierDemoWindow(wx.Window, Knob):
         self.Bind(wx.EVT_SIZE, self.sizeHandler)
 
         self.freqmax = Param(100, lista= np.arange(11,2000,1) ) 
-        
-        
         self.freqmax.attach(self)
-
         self.draw()
-
         pub.subscribe(self._update, 'detmapchanged') 
-        
-    def _update(self, newdet=None, newmap=None):
+    def _update(self, newdet=None, newmap = None, fechac =None, horac = None   ):
+            
+        mapita = Basemap(ax=self.inset_ax,projection='moll',lon_0 = 0)
+
+        X = np.arange(-180,180.,1.)
+        Y = np.arange(-90.,90.,1.)
+        X, Y = np.meshgrid(X,Y)
+                
         if newmap == 1.:
+            #mapita.ax.clear() 
+            
             self.mapastatus.set(1.)
+            self.aaprueba.set(50.)
+            
+            if self.detector.value == 0:
+                Z = np.loadtxt('datafiles/H1antenna.out')
+            
+            if self.detector.value == 1:
+                Z = np.loadtxt('datafiles/L1antenna.out')
+           
+            im1 = mapita.pcolormesh(X,Y,Z, shading='flat',\
+                    cmap=matplotlib.cm.jet,latlon=True)
+            self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+            mapita.drawcoastlines()
+
         if newmap ==0.:
             self.mapastatus.set(0.)
+            self.aaprueba.set(10.)
+            self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+            mapita.ax.clear() 
+            mapita.bluemarble(scale=.1)
+            self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
 
-        print self.mapastatus.value
+        
         if newdet == 1.:
-            if newmap == 1.:
-                print 'klk cambio a mapa'
-                if self.detector.value == 0.0:
-                    print 'Estamos en Har'
-                    #zs =np.loadtxt('H1antenna.out')
-                if self.detector.value ==1.0:
-                    print 'Estamos en L'
-                    #zs = np.loadtxt('L1antenna.out')
-        
-        
-        
-        
-        #        if newdet == 0.:
-#            xnot = np.zeros([5,5])
-#            im1.set_array(xnot)
-#            mapita = Basemap(ax=self.inset_ax,projection='moll',lon_0 = 10,resolution=None)
-#            mapita.bluemarble(scale=.2)
-#            #Call to Functionn
-#            t0=900000000 #gps seconds
-#            iota = 0. #(radians)
-#            psi = 0.343 #(radians)
-#            
-#            if self.detector.value == 0.0:
-#                Z =np.loadtxt('H1antenna.out')
-#            if self.detector.value ==1.0:
-#                Z = np.loadtxt('L1antenna.out')
-#            X = np.arange(-180,180.,1.)
-#            Y = np.arange(-90.,90.,1.)
-#        
-#        self.raplot, self.decplot = mapita(self.ra.value, self.dec.value)
-#        self.scatter = mapita.scatter(self.raplot, self.decplot,c='r')
-#       
-#        if snr1 > 0.5:
-#            self.scatteridx = self.subplot1.scatter(freqrangetheory[idx1],\
-#                    h1[idx1]*np.sqrt(freqrangetheory[idx1]),c='r',s=100)
-#
-#            
-#            
-#            #snr1, h1, asd1, freqrange1, freqrangetheory1, timee1,quantum1,pend1,inter1,fI,R1=\
-##                self.computenoise(t0,np.radians(self.ra.value+180.),np.radians(self.dec.value),\
-#
-##            ralist = np.arange(-180,180.,1)
-##            declist = np.arange(-90.,90.,1)
-##            X,Y = np.meshgrid(ralist, declist)
-##            
-##            if self.detector.value == 0.0:
-#                print 'hola'
-##                #zs =np.loadtxt('H1antenna.out')
-##            if self.detector.value ==1.0:
-##                print 'hola'
-#                #zs = np.loadtxt('L1antenna.out')
-##            if self.detector.value == 2.0:
-##                #Call to Functionn
-##                t0=900000000 #gps seconds
-##                iota = 0. #(radians)
-##                psi = 0.343 #(radians)
-##                snr1, h1, asd1, freqrange1, freqrangetheory1, timee1,quantum1,pend1,inter1,fI,R1=\
-##                self.computenoise(t0,np.radians(self.ra.value+180.),np.radians(self.dec.value),\
-##                iota,psi,self.dist.value, self.mass.value,self.mass.value,self.detector.value,\
-##                self.freqmax.value,self.A.value,self.f0.value)
-##                print R1
-##                hazs =np.loadtxt('H1antenna.out')
-##                lizs = np.loadtxt('L1antenna.out')
-##                lizs = R1*lizs
-##                zs=lizs+hazs
-#            
-##            apt = zs[:,0]
-##            act = zs[:,1]
-##            Z = np.sqrt((apt**2+act**2)).reshape(X.shape)
-##            self.inset_ax.contourf(X,Y,Z,transform=ccrs.PlateCarree())
-#            #self.scatter = self.inset_ax.scatter(self.raplot, self.decplot,c='r',transform=ccrs.PlateCarree())
-##            self.decplot = self.dec.value#*(np.pi/180.)
-##            self.raplot = self.ra.value#*(np.pi/180.)
-##
-##            self.scatter.set_offsets([ self.raplot, self.decplot])
-#            #self.repaint()
+
+            if self.mapastatus.value == 1.:
+                if self.detector.value == 0:
+                    Z = np.loadtxt('datafiles/H1antenna.out')
+                
+                if self.detector.value == 1:
+                    Z = np.loadtxt('datafiles/L1antenna.out')
+               
+                #mapita.ax.clear() 
+                im1 = mapita.pcolormesh(X,Y,Z, shading='flat',\
+                        cmap=matplotlib.cm.jet,latlon=True)
+                self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+                mapita.drawcoastlines()
+            
+        self.repaint()
 
     def sizeHandler(self, *args, **kwargs):
         self.canvas.SetSize(self.GetSize())
@@ -463,16 +428,8 @@ class FourierDemoWindow(wx.Window, Knob):
         if not hasattr(self, 'subplot1'):
             self.subplot1 = self.figure.add_subplot(111)
             self.inset_ax = self.figure.add_axes([0.55,0.04,0.45,0.3] )
-            mapita = Basemap(ax=self.inset_ax,projection='moll',lon_0 = 10,resolution=None)
+            mapita = Basemap(ax=self.inset_ax,projection='moll',lon_0 = 0,resolution=None)
 
-#            self.inset_ax = self.figure.add_axes([0.55, 0.04, 0.45, 0.3]
-#                    ,projection=ccrs.PlateCarree())# \
-
-#            self.inset_ax.coastlines() 
-            
-            #Change this
-           # self.inset_ax.grid(True , which="both", ls="-", alpha=.5)
-            
             # hook some mouse events
             self.canvas.callbacks.connect('button_press_event', self.OnLeftDown)
         
@@ -480,7 +437,6 @@ class FourierDemoWindow(wx.Window, Knob):
         t0=900000000 #gps seconds
         iota = 0. #(radians)
         psi = 0.343 #(radians)
-        #print self.ltotal.value
         snr1, h1, asd1, freqrange1, freqrangetheory, timee1, seis1, coat1, susp1, fGWI, idx1,idx2 = \
                 self.computenoise(t0, self.ra.value+180., self.dec.value, iota, psi, self.dist.value, \
                 self.mass.value, self.mass.value, self.detector.value, self.freqmax.value, \
@@ -489,23 +445,6 @@ class FourierDemoWindow(wx.Window, Knob):
         
         self.raplot, self.decplot = mapita(self.ra.value, self.dec.value)
         mapita.bluemarble(scale=.2)
-        #self.decplot = self.dec.value#*(np.pi/180.)
-        #self.raplot = self.ra.value#*(np.pi/180.)
-        
-        #ralist = np.arange(-180,180.,1)
-        #declist = np.arange(-90.,90.,1)
-        #X,Y = np.meshgrid(ralist, declist)
-        
-#        if self.detector.value == 0.0:
-##            zs =np.loadtxt('H1antenna.out')
-#        if self.detector.value ==1.0:
-##            zs = np.loadtxt('L1antenna.out')
-#
-#        apt = zs[:,0]
-#        act = zs[:,1]
-#        Z = np.sqrt((apt**2+act**2)).reshape(X.shape)
-#        self.mapita = self.inset_ax.contourf(X,Y,Z,transform=ccrs.PlateCarree())
-        #self.inset_ax.coastlines() 
 #Map
         ###
         self.subplot1.set_yscale('log')
@@ -541,7 +480,7 @@ class FourierDemoWindow(wx.Window, Knob):
         
         self.lines += self.subplot1.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
                 '-', label='Effective Induced Strain')
-        self.scatter = mapita.scatter(self.raplot, self.decplot,c='r')
+        self.scatter = mapita.scatter(self.raplot, self.decplot,c='r', marker = '*', s=100)
        
         if snr1 > 0.5:
             self.scatteridx = self.subplot1.scatter(freqrangetheory[idx1],\
@@ -549,11 +488,13 @@ class FourierDemoWindow(wx.Window, Knob):
             #self.scatteridx2 = self.subplot1.scatter(freqrangetheory[idx2],\
             #            h1[idx2]*np.sqrt(freqrangetheory[idx2]),c='r',s=100)
         #print idx1 
-        
+
         self.subplot1.legend(loc='best', fancybox=True, framealpha=0.5)
       
         mapita.bluemarble(scale = .1)
-        #Set some plot attributes
+
+#Set some plot attributes
+
         self.subplot1.set_title("Click and drag sliders to change source and design parameters", fontsize=14)
 
     def computenoise(self,t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec):
@@ -565,7 +506,8 @@ class FourierDemoWindow(wx.Window, Knob):
 
     def setKnob(self, value):
         # Note, we ignore value arg here and just go by state of the params
-        #Call to Function
+       
+       #Call to Function
         t0=900000000 #gps seconds
         iota = 0. #(radians)
         psi = 0.343 #(radians)
@@ -581,9 +523,6 @@ class FourierDemoWindow(wx.Window, Knob):
         annotation_string +=r'$t_{elapsed}=%.2f$'%timee1
         self.text.set_text(annotation_string  )
 
-#        freq1 = [freq1[i] for i in np.arange(0,len(freq1),2)]
-#        h1 = np.array([h1[i] for i in np.arange(0,len(h1),2)])
-        #cercanofreq = int(min(freqrange1, key=lambda x:abs(x-self.freqmax.value)))  
         #prueba = 125 #nip.where(freqrange1== 10.046251)
         #print 'freq', freqrange1[prueba]
         #print 'seismic:,', seis1[prueba]
@@ -596,9 +535,7 @@ class FourierDemoWindow(wx.Window, Knob):
         setp(self.lines[3], xdata=freqrange1, ydata=coat1)
         setp(self.lines[4], xdata=freqrangetheory, ydata=h1*np.sqrt(freqrangetheory))
         
-        mapita2 = Basemap(projection='moll',lon_0 = 10,resolution=None)
-        #self.raplot, self.decplot = mapita2(self.ra.value, self.dec.value, inverse=True)
-        #print 'mapita', self.raplot, self.decplot
+        mapita2 = Basemap(projection='moll',lon_0 = 0,resolution=None)
         self.raplot, self.decplot = mapita2(self.ra.value, self.dec.value)
         self.scatter.set_offsets([ self.raplot, self.decplot])
         
@@ -613,20 +550,17 @@ class FourierDemoWindow(wx.Window, Knob):
 #            if max(freqrangetheory) < 200:
 #                self.scatteridx2.set_offsets([0,0])
 
-
-        #mapita.scatter(self.raplot, self.decplot,c='r')
-
         #print self.raplot
         if self.detector.value == 0:
             sbdet = 'Harford'
         if self.detector.value ==1:
             sbdet ='Livinston'
-#        if self.detector.value == 2:
-#            sbdet = 'Netword of Harford and Livinston'
-#        hdist = snr1/8.
 
-        pub.sendMessage('changestatusbar',msg1= 'Horizon Distance for SNR of 8:    %s'% 'algo' +'    Mpc' ,\
-                msg2='Detector: %s' % sbdet)
+        pub.sendMessage('changestatusbar',\
+                msg1= \
+                'Horizon Distance for SNR of 8:    %s'% 'algo' +'    Mpc' ,\
+                msg2 = 'Time to ISCO: %s' %'algo' + ' s')
+#                msg2='Detector: %s' % sbdet)
         
         self.repaint()
 
