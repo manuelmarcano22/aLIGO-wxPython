@@ -4,7 +4,6 @@ import lalsimulation
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
-#from scipy import interpolate
 
 
 def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec):
@@ -108,7 +107,6 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     #l4 = np.array([1, 2, 3])
     l4 = 100*np.array([0.6,0.85,1.1] )
     
-    #ltotallist = np.array([1,2,3])
     ltotallist = 100*np.array([1.6,1.87,2.14] )
     mm = int(np.where(mm == massdet)[0])
     ltotal = int(np.where(ltotallist == ltotal)[0])
@@ -121,15 +119,58 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
         i=np.array([3,4,5])
     if ltotal == 2:
         i=np.array([6,7,8])
-   
+    
     #print 'ltotal', ltotal
-    i = i[lsec]
     mm= mm +1
+    i = i[lsec]
     seis = seis[i*(500):(1+i)*500,mm]   
     coat = coat[i*(500):(1+i)*500,mm]   
     susp = susp[i*(500):(1+i)*500,mm]   
-    #asd = np.sqrt(seis**2 + coat**2 + susp**2)
-    asd = np.sqrt(seis**2 + coat**2 + susp**2)
+
+#Quantum Noise. It is Radiation Pressure low and in high. 
+##https://ligo-vcs.phys.uwm.edu/cgit/lalsuite/tree/lalsimulation/src/LALSimNoisePSD.c
+# * Provides the quantum noise power spectrum for aLIGO under the high-power
+# * broad-band signal recycling (no detuning of the signal recycling cavity).
+# *
+# * See: LIGO-T0900288-v3 and LIGO-T070247-01.
+# * This configuration is labelled Zero Detune, High Power.
+# */Parameters:
+    eta = 0.9
+    ds = 0.0
+    zeta = 116.0 * (np.pi/180.)
+    laser_pow = 125.#Laser Power Low or High SI
+    laser_wave = 1.064e-6#Wavelength
+    arm_length =  3995 #Meters
+    mirror_mass =  massdet #Kg
+    mirror_loss = 37.5e-6#Mirror Loss
+    beam_splitter_loss  = 0.002 
+    itm_trans =    0.014#I
+    prm_trans = 0.027#PRM
+    srm_trans = 0.2 #SRM
+
+
+
+    quantum=np.array([])
+    for i in np.arange(len(freqrange)):
+        temp = lalsimulation.SimNoisePSDQuantum(freqrange[i],
+                laser_pow,
+                laser_wave,
+                arm_length,
+                massdet,
+                mirror_loss,
+                beam_splitter_loss,
+                itm_trans,
+                prm_trans,
+                srm_trans,
+                ds, zeta, eta)
+        quantum = np.append(quantum, temp)
+        #quantum = np.sqrt(quantum)
+    #quantum[-5:] = 0.  ####Porque?????
+
+#ASD 
+    asd = np.sqrt(seis**2 + coat**2 + susp**2 + quantum)
+    #asd = np.sqrt(seis**2 + coat**2 + susp**2 )
+
 
     
     #Interpolation:
@@ -197,9 +238,10 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     #print 'i %d' %i
     #print 'mm %d' %mm
 
-    return snr, h, asd, freqrange, ftheory, timeelapsed, seis, coat, susp, fGWI, idx, idx2
+    return snr, h, asd, freqrange, ftheory, timeelapsed,seis, coat, \
+            susp, fGWI, idx, idx2, quantum
 #
-##
+###
 ##Prueba:s
 ##To call the FUnctions:
 #t0=900000000 #gps seconds
@@ -216,8 +258,16 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #ltotal =  100*2.14 # 1.6#1.87# 2.14 #1.87   # 2.1
 #lsec = 100*1.1 #0.6
 #
-#snr1, h1, asd1, freqrange1, freqrangetheory, timee1, seis1, coat1, susp1, fGWI ,idx,idx2= \
+#snr1, h1, asd1, freqrange1, freqrangetheory, timee1, \
+#        seis1, coat1, susp1, fGWI ,idx,idx2, quantum1= \
 #        sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec)
+##for i in np.arange(40,120,20):
+##        snr1, h1, asd1, freqrange1, freqrangetheory, timee1, \
+##            seis1, coat1, susp1, fGWI ,idx,idx2, quantum1= \
+##            sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,i,ltotal,lsec)
+##        print i
+##        print quantum1[-10:]
+##        print freqrange1[-1]
 #
 #figure = plt.figure()
 ###
@@ -260,9 +310,7 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #        temp = lalsimulation.SimNoisePSDaLIGOQuantumZeroDetHighPower(i)
 #        q[i] = temp
 #
-#subplot1.plot(freqrange, np.sqrt(q[:len(freqrange)]))
-#
-#
+##subplot1.plot(freqrange, np.sqrt(q[:len(freqrange)]))
 #subplot1.plot(freqrange1, asd1, \
 #        '-', label='Sensitivity Curve')
 #subplot1.plot(freqrange1,seis1,\
@@ -271,6 +319,9 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #        '-', label='Suspension Thermal Noise')
 #subplot1.plot(freqrange1,coat1,\
 #        '-', label='Coating Brownian Noise')
+#
+#subplot1.plot(freqrange1,np.sqrt(quantum1),\
+#        '-', label='Quantum Noise')
 #
 #subplot1.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
 #        '-', label='Effective Induced Strain')
@@ -368,4 +419,4 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 ###        True , which="both", ls="-", alpha=.5)
 #plt.show()
 ###
-
+##
