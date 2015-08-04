@@ -437,9 +437,12 @@ class FourierDemoWindow(wx.Window, Knob):
         t0=900000000 #gps seconds
         iota = 0. #(radians)
         psi = 0.343 #(radians)
-        snr1, h1, asd1, freqrange1, freqrangetheory, timee1, seis1, coat1, susp1, fGWI, idx1,idx2 = \
-                self.computenoise(t0, self.ra.value+180., self.dec.value, iota, psi, self.dist.value, \
-                self.mass.value, self.mass.value, self.detector.value, self.freqmax.value, \
+        snr1, h1, asd1, freqrange1, freqrangetheory, timee1,\
+                seis1, coat1, susp1, fGWI, idx1,idx2, quantum1 = \
+                self.computenoise(t0, self.ra.value+180., \
+                self.dec.value, iota, psi, self.dist.value, \
+                self.mass.value, self.mass.value, \
+                self.detector.value, self.freqmax.value, \
                 self.f0.value, self.ltotal.value, self.A.value)
 
         
@@ -478,8 +481,13 @@ class FourierDemoWindow(wx.Window, Knob):
         self.lines += self.subplot1.plot(freqrange1,coat1,\
                 '-', label='Coating Brownian Noise')
         
+        
         self.lines += self.subplot1.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
                 '-', label='Effective Induced Strain')
+        
+        self.lines += self.subplot1.plot(freqrange1,np.sqrt(quantum1),\
+                '-', label='Quantum Noise')
+        
         self.scatter = mapita.scatter(self.raplot, self.decplot,c='r', marker = '*', s=100)
        
         if snr1 > 0.5:
@@ -498,8 +506,8 @@ class FourierDemoWindow(wx.Window, Knob):
         self.subplot1.set_title("Click and drag sliders to change source and design parameters", fontsize=14)
 
     def computenoise(self,t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec):
-        a, b, c, d, e,f,g,h,i,j,k,l = sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec)
-        return a, b, c, d, e, f,g,h,i, j,k,l
+        a, b, c, d, e,f,g,h,i,j,k,l,m = sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec)
+        return a, b, c, d, e, f,g,h,i, j,k,l,m
     
     def repaint(self):
         self.canvas.draw()
@@ -512,7 +520,8 @@ class FourierDemoWindow(wx.Window, Knob):
         iota = 0. #(radians)
         psi = 0.343 #(radians)
 
-        snr1, h1, asd1, freqrange1, freqrangetheory, timee1, seis1, coat1, susp1, fGWI,idx1,idx2 = \
+        snr1, h1, asd1, freqrange1, freqrangetheory, timee1, \
+                seis1, coat1, susp1, fGWI,idx1,idx2, quantum1 = \
                 self.computenoise(t0, self.ra.value+180., self.dec.value, iota, psi, self.dist.value, \
                 self.mass.value, self.mass.value, self.detector.value, self.freqmax.value, \
                 self.f0.value, self.ltotal.value, self.A.value)
@@ -534,6 +543,7 @@ class FourierDemoWindow(wx.Window, Knob):
         setp(self.lines[2], xdata=freqrange1, ydata=susp1)
         setp(self.lines[3], xdata=freqrange1, ydata=coat1)
         setp(self.lines[4], xdata=freqrangetheory, ydata=h1*np.sqrt(freqrangetheory))
+        setp(self.lines[5], xdata=freqrange1, ydata=np.sqrt(quantum1))
         
         mapita2 = Basemap(projection='moll',lon_0 = 0,resolution=None)
         self.raplot, self.decplot = mapita2(self.ra.value, self.dec.value)
