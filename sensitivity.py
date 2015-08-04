@@ -198,7 +198,7 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     #print 'mm %d' %mm
 
     return snr, h, asd, freqrange, ftheory, timeelapsed, seis, coat, susp, fGWI, idx, idx2
-
+#
 ##
 ##Prueba:s
 ##To call the FUnctions:
@@ -249,9 +249,22 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #
 ##coating Brownian, seismic, suspension thermal noise.
 #
+#
 #lines=[]
+#
+#
+#freqrange = np.arange(1,10001,1)
+#q=np.zeros(len(freqrange)+1)
+#
+#for i in freqrange:
+#        temp = lalsimulation.SimNoisePSDaLIGOQuantumZeroDetHighPower(i)
+#        q[i] = temp
+#
+#subplot1.plot(freqrange, np.sqrt(q[:len(freqrange)]))
+#
+#
 #subplot1.plot(freqrange1, asd1, \
-#        'o-', label='Sensitivity Curve')
+#        '-', label='Sensitivity Curve')
 #subplot1.plot(freqrange1,seis1,\
 #        '-',label='Seismic Noise')
 #subplot1.plot(freqrange1,susp1,\
@@ -260,7 +273,7 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #        '-', label='Coating Brownian Noise')
 #
 #subplot1.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
-#        'o-', label='Effective Induced Strain')
+#        '-', label='Effective Induced Strain')
 #
 #subplot1.legend(loc='best', fancybox=True, framealpha=0.5)
 #
@@ -323,7 +336,7 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #X, Y = np.meshgrid(X,Y)
 #Z = np.reshape(Z, X.shape)
 ###np.savetxt('L1antenna.out',Z)
-###Z = np.loadtxt('L1antenna.out')
+###Z = np.loadtxt('datafiles/L1antenna.out')
 ###Contour
 #im1 = mapita.pcolormesh(X,Y,Z,shading='flat',cmap=plt.cm.jet,latlon=True)
 #mapita.drawcoastlines()
@@ -355,5 +368,4 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 ###        True , which="both", ls="-", alpha=.5)
 #plt.show()
 ###
-##
 
