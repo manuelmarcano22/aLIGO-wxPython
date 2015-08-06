@@ -8,6 +8,8 @@ Y con calendario.
 
 import numpy as np
 import wx
+import wx.calendar as cal
+from wx.lib.masked import TimeCtrl
 from sensitivity import sensitivity
 import os
 import matplotlib
@@ -162,8 +164,8 @@ class FourierDemoFrame(wx.Frame):
 
         self.create_menu()
         self.statusbar=self.CreateStatusBar(style=wx.SB_RAISED)
-        self.statusbar.SetFieldsCount(2)
-        self.statusbar.SetStatusWidths([-3, -3])
+        self.statusbar.SetFieldsCount(3)
+        self.statusbar.SetStatusWidths([-4, -3, -3])
         pub.subscribe(self.change_statusbar, 'changestatusbar')
 
         self.fourierDemoWindow = FourierDemoWindow(self)
@@ -187,6 +189,7 @@ class FourierDemoFrame(wx.Frame):
         self.spinerFreq = SpinerGroup(self,title='Maximum Waveform Freq (Hz)',label='l',\
                 position=wx.DefaultPosition, size=wx.DefaultSize,\
                 param=self.fourierDemoWindow.freqmax)
+        self.dateandtime = calendar(self)
 
         sizerbox = wx.BoxSizer(wx.HORIZONTAL)
         sizerbox.Add(self.massSliderGroup.sizer, 0  ,\
@@ -199,6 +202,7 @@ class FourierDemoFrame(wx.Frame):
         sizer3.Add(sizerbox,1,wx.EXPAND)
         sizer3.Add(self.spinerFreq.sizer,0)
         sizer3.Add(self.radioBoxes.radioBox,0,wx.EXPAND)
+        sizer3.Add(self.dateandtime.sizer,0)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.fourierDemoWindow,1, wx.EXPAND)
@@ -217,10 +221,10 @@ class FourierDemoFrame(wx.Frame):
         self.SetSizer(sizer2)
         
 
-    def change_statusbar(self, msg1,msg2):
-        pass
+    def change_statusbar(self, msg1,msg2,msg3):
         self.statusbar.SetStatusText(msg1,0)
         self.statusbar.SetStatusText(msg2,1)
+        self.statusbar.SetStatusText(msg3,2)
 
 
 
@@ -288,6 +292,50 @@ class FourierDemoFrame(wx.Frame):
     def on_map(self, event):
         pub.sendMessage('detmapchanged' , newmap = 0.)#,newdet =0.  ,newmap = 0.)      
 
+class calendar(Knob):
+    def __init__(self,parent):
+        a = wx.DatePickerCtrl(parent,id=-1, name='datee')
+        b= TimeCtrl(parent, id=-1, value='02:00:00')
+        self.date_label = wx.StaticText(parent, label='Date and Time')
+        
+        self.cal = a
+        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        sizer1.Add(self.cal)
+        sizer1.Add(b)
+        
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.date_label, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=2)
+        sizer.Add(sizer1, 1, wx.EXPAND)
+        self.sizer = sizer
+        
+        self.cal.Bind(wx.EVT_DATE_CHANGED, self.OnDateChanged, id=a.GetId())
+        
+    
+    def OnDateChanged(self, evt):
+#        self("OnDateChanged: %s\n" % evt.GetDate())
+        pub.sendMessage('detmapchanged', fechac = evt.GetDate())      
+
+      
+      
+      #self.slider.Bind(wx.EVT_SLIDER, self.sliderHandler)
+
+
+    #Poner un sizer como los otros con label y data y vaina para el sizer poner en 
+# en Fram#
+
+    #a=wx.DatePickerCtrl(self,id=-1,name='datee')
+#        b=TimeCtrl(self, id = -1,
+#        value = '02:00:00',
+#        name = 'timee',
+#        pos = wx.DefaultPosition,
+#        size = wx.DefaultSize,
+#        )
+#        self.date_label = wx.StaticText(self, label='Date and Time')
+#
+#        sizerdateandtime1 = wx.BoxSizer(wx.HORIZONTAL)
+#        sizerdateandtime1.Add(a)
+#        sizerdateandtime1.Add(b,border=2)
+
 
 class RadioBoxFram(Knob):
     def __init__(self, parent, label, paramlist, detector ):
@@ -305,6 +353,7 @@ class RadioBoxFram(Knob):
         value = float(value)
         self.detector.set(value)
         pub.sendMessage('detmapchanged', newdet = 1.)      
+        print self.detector.value
 
 class FourierDemoWindow(wx.Window, Knob):
     def __init__(self, *args, **kwargs):
@@ -314,11 +363,9 @@ class FourierDemoWindow(wx.Window, Knob):
         self.canvas = FigureCanvasWxAgg(self, -1, self.figure)
         self.state = ''
         
-        
         self.aaprueba =   Param2(0., lista = np.array([0.,1.]))
         self.aaprueba.attach(self)
         
-       
         self.mapastatus =   Param(0., lista = np.array([0.,1.]))   
 
        #mass det
@@ -334,8 +381,7 @@ class FourierDemoWindow(wx.Window, Knob):
         self.mass = Param(4., lista =np.arange(1,11,.1) )
         self.dist = Param(100.,  lista=np.arange(10,10000,10)) 
        
-
-        self.detector = Param(0., lista=np.array([0.,1.]) )
+        self.detector = Param(0., lista=np.array([0.,1.,2.]) )
         
         self.dec = Param(-29.4,lista=np.linspace(-90 ,90,180))
         self.ra = Param(71.85-180, lista=np.linspace(-180,180,360) )
@@ -355,12 +401,17 @@ class FourierDemoWindow(wx.Window, Knob):
         self.ltotal.attach(self)
         self.Bind(wx.EVT_SIZE, self.sizeHandler)
 
-        self.freqmax = Param(100, lista= np.arange(11,2000,1) ) 
+        self.freqmax = Param(150, lista= np.arange(11,2000,1) ) 
         self.freqmax.attach(self)
         self.draw()
         pub.subscribe(self._update, 'detmapchanged') 
     def _update(self, newdet=None, newmap = None, fechac =None, horac = None   ):
-            
+        
+        if fechac:
+            self.aaprueba.set(fechac)
+            return 
+
+
         mapita = Basemap(ax=self.inset_ax,projection='moll',lon_0 = 0)
 
         X = np.arange(-180,180.,1.)
@@ -368,45 +419,61 @@ class FourierDemoWindow(wx.Window, Knob):
         X, Y = np.meshgrid(X,Y)
                 
         if newmap == 1.:
-            #mapita.ax.clear() 
             
             self.mapastatus.set(1.)
-            self.aaprueba.set(50.)
             
             if self.detector.value == 0:
                 Z = np.loadtxt('datafiles/H1antenna.out')
-            
-            if self.detector.value == 1:
-                Z = np.loadtxt('datafiles/L1antenna.out')
-           
-            im1 = mapita.pcolormesh(X,Y,Z, shading='flat',\
-                    cmap=matplotlib.cm.jet,latlon=True)
-            self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
-            mapita.drawcoastlines()
-
-        if newmap ==0.:
-            self.mapastatus.set(0.)
-            self.aaprueba.set(10.)
-            self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
-            mapita.ax.clear() 
-            mapita.bluemarble(scale=.1)
-            self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
-
-        
-        if newdet == 1.:
-
-            if self.mapastatus.value == 1.:
-                if self.detector.value == 0:
-                    Z = np.loadtxt('datafiles/H1antenna.out')
-                
-                if self.detector.value == 1:
-                    Z = np.loadtxt('datafiles/L1antenna.out')
-               
-                #mapita.ax.clear() 
                 im1 = mapita.pcolormesh(X,Y,Z, shading='flat',\
                         cmap=matplotlib.cm.jet,latlon=True)
                 self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
                 mapita.drawcoastlines()
+
+            if self.detector.value == 1:
+                Z = np.loadtxt('datafiles/L1antenna.out')
+                im1 = mapita.pcolormesh(X,Y,Z, shading='flat',\
+                        cmap=matplotlib.cm.jet,latlon=True)
+                self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+                mapita.drawcoastlines()
+          
+            if self.detector.value == 2.:
+                self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+                mapita.ax.clear() 
+                mapita.bluemarble(scale=.1)
+                self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+
+
+        if newmap ==0.:
+            self.mapastatus.set(0.)
+            #self.aaprueba.set(10.)
+            self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+            mapita.ax.clear() 
+            mapita.bluemarble(scale=.1)
+            self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+      
+        if newdet == 1.:
+            
+            if self.detector.value == 2:
+                self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+                mapita.ax.clear() 
+                mapita.bluemarble(scale=.1)
+                self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+
+
+            if self.mapastatus.value == 1. and self.detector.value !=2.:
+                if self.detector.value == 0:
+                    Z = np.loadtxt('datafiles/H1antenna.out')
+                    im1 = mapita.pcolormesh(X,Y,Z, shading='flat',\
+                            cmap=matplotlib.cm.jet,latlon=True)
+                    self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+                    mapita.drawcoastlines()
+                
+                if self.detector.value == 1:
+                    Z = np.loadtxt('datafiles/L1antenna.out')
+                    im1 = mapita.pcolormesh(X,Y,Z, shading='flat',\
+                            cmap=matplotlib.cm.jet,latlon=True)
+                    self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+                    mapita.drawcoastlines()
             
         self.repaint()
 
@@ -437,15 +504,15 @@ class FourierDemoWindow(wx.Window, Knob):
         t0=900000000 #gps seconds
         iota = 0. #(radians)
         psi = 0.343 #(radians)
+        print np.radians(self.ra.value+180.), np.radians(self.dec.value)
         snr1, h1, asd1, freqrange1, freqrangetheory, timee1,\
-                seis1, coat1, susp1, fGWI, idx1,idx2, quantum1 = \
+                seis1, coat1, susp1, fGWI, idx1,idx2, quantum1, tisco, hordist, averange = \
                 self.computenoise(t0, self.ra.value+180., \
                 self.dec.value, iota, psi, self.dist.value, \
                 self.mass.value, self.mass.value, \
                 self.detector.value, self.freqmax.value, \
                 self.f0.value, self.ltotal.value, self.A.value)
 
-        
         self.raplot, self.decplot = mapita(self.ra.value, self.dec.value)
         mapita.bluemarble(scale=.2)
 #Map
@@ -456,7 +523,8 @@ class FourierDemoWindow(wx.Window, Knob):
         #Text box for SNR
         annotation_string = r'$SNR=%.2f$'%snr1
         annotation_string +='\n'
-        annotation_string +=r'$t_{elapsed}=%.2f$'%timee1
+#        annotation_string +=r'$t_{elapsed}=%.2f$'%timee1
+        annotation_string +=r'$t_{in \, view}=%.2f$'%timee1
         self.text = self.subplot1.text(0.02,0.97, annotation_string,size=20 ,ha='left', va='top',\
                 transform=self.subplot1.transAxes, \
                 bbox = dict(boxstyle='round', ec=(1., 0.5, 0.5),\
@@ -481,7 +549,6 @@ class FourierDemoWindow(wx.Window, Knob):
         self.lines += self.subplot1.plot(freqrange1,coat1,\
                 '-', label='Coating Brownian Noise')
         
-        
         self.lines += self.subplot1.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
                 '-', label='Effective Induced Strain')
         
@@ -493,8 +560,8 @@ class FourierDemoWindow(wx.Window, Knob):
         if snr1 > 0.5:
             self.scatteridx = self.subplot1.scatter(freqrangetheory[idx1],\
                     h1[idx1]*np.sqrt(freqrangetheory[idx1]),c='r',s=100)
-            #self.scatteridx2 = self.subplot1.scatter(freqrangetheory[idx2],\
-            #            h1[idx2]*np.sqrt(freqrangetheory[idx2]),c='r',s=100)
+            self.scatteridx2 = self.subplot1.scatter(freqrangetheory[idx2],\
+                        h1[idx2]*np.sqrt(freqrangetheory[idx2]),c='r',marker='*',s=50)
         #print idx1 
 
         self.subplot1.legend(loc='best', fancybox=True, framealpha=0.5)
@@ -506,8 +573,8 @@ class FourierDemoWindow(wx.Window, Knob):
         self.subplot1.set_title("Click and drag sliders to change source and design parameters", fontsize=14)
 
     def computenoise(self,t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec):
-        a, b, c, d, e,f,g,h,i,j,k,l,m = sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec)
-        return a, b, c, d, e, f,g,h,i, j,k,l,m
+        a, b, c, d, e,f,g,h,i,j,k,l,m,n,o,p = sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec)
+        return a, b, c, d, e, f,g,h,i, j,k,l,m,n,o,p
     
     def repaint(self):
         self.canvas.draw()
@@ -521,7 +588,7 @@ class FourierDemoWindow(wx.Window, Knob):
         psi = 0.343 #(radians)
 
         snr1, h1, asd1, freqrange1, freqrangetheory, timee1, \
-                seis1, coat1, susp1, fGWI,idx1,idx2, quantum1 = \
+                seis1, coat1, susp1, fGWI,idx1,idx2, quantum1, tisco, hordist, averange = \
                 self.computenoise(t0, self.ra.value+180., self.dec.value, iota, psi, self.dist.value, \
                 self.mass.value, self.mass.value, self.detector.value, self.freqmax.value, \
                 self.f0.value, self.ltotal.value, self.A.value)
@@ -529,7 +596,7 @@ class FourierDemoWindow(wx.Window, Knob):
 
         annotation_string = r'$SNR=%.2f$'%snr1
         annotation_string +='\n'
-        annotation_string +=r'$t_{elapsed}=%.2f$'%timee1
+        annotation_string +=r'$t_{in \, view}=%.2f$'%timee1
         self.text.set_text(annotation_string  )
 
         #prueba = 125 #nip.where(freqrange1== 10.046251)
@@ -551,13 +618,13 @@ class FourierDemoWindow(wx.Window, Knob):
         
         if snr1 < 0.5:
             self.scatteridx.set_offsets([0,0])
-            #self.scatteridx2.set_offsets([0,0])
+            self.scatteridx2.set_offsets([0,0])
         if snr1 > 0.5:
             self.scatteridx.set_offsets([freqrangetheory[idx1],\
                     h1[idx1]*np.sqrt(freqrangetheory[idx1])])
-#            self.scatteridx2.set_offsets([freqrangetheory[idx2],\
-#                    h1[idx2]*np.sqrt(freqrangetheory[idx2])])
-#            if max(freqrangetheory) < 200:
+            self.scatteridx2.set_offsets([freqrangetheory[idx2],\
+                    h1[idx2]*np.sqrt(freqrangetheory[idx2])])
+#            if max(freqrangetheory) < 100:
 #                self.scatteridx2.set_offsets([0,0])
 
         #print self.raplot
@@ -568,9 +635,9 @@ class FourierDemoWindow(wx.Window, Knob):
 
         pub.sendMessage('changestatusbar',\
                 msg1= \
-                'Horizon Distance for SNR of 8:    %s'% 'algo' +'    Mpc' ,\
-                msg2 = 'Time to ISCO: %s' %'algo' + ' s')
-#                msg2='Detector: %s' % sbdet)
+                'Horizon Distance for SNR of 8:    %f' % hordist  +'    Mpc' ,\
+                msg2 = 'Average Range %f' % averange + ' Mpc',
+                msg3 = 'Time to ISCO: %f' %tisco + ' s')
         
         self.repaint()
 
