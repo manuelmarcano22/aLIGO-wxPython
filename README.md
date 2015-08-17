@@ -20,6 +20,10 @@ Prerequisite packages
 * [Astropy](http://www.astropy.org/)
 
 
+Usage:
+=======
+To execute clone the git repository and run the main program aLIGO:
+* `python aLIGO.py`
 
 Gallery
 =======
