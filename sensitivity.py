@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-import lal
 from antennamod import antenna_pattern
-import lalsimulation
 import numpy as np
 #import matplotlib.pyplot as plt
 #from mpl_toolkits.basemap import Basemap
@@ -22,8 +20,8 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     #masses in SI units:
     c = 299792458.        # m/s
     G = 6.67384e-11       # m**3 / s**2 / kg = M1+M2   # total mass
-    M1 = m1inj * lal.MSUN_SI
-    M2 = m2inj * lal.MSUN_SI
+    M1 = m1inj * 1.9885469549614615e+30 #lal.MSUN_SI
+    M2 = m2inj *  1.9885469549614615e+30#lal.MSUN_SI
     M = M1 + M2
     Mu = M1*M2/M    # reduced mass in CMS
     Mchirp = M**(2./5.)*Mu**(3./5.)   # chirp mass
@@ -40,11 +38,11 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
         #masses in SI units:
         c = 299792458.        # m/s
         G = 6.67384e-11       # m**3 / s**2 / kg = M1+M2   # total mass
-        M1 = m1inj * lal.MSUN_SI
-        M2 = m2inj * lal.MSUN_SI
+        M1 = m1inj * 1.9885469549614615e+30 #lal.MSUN_SI
+        M2 = m2inj * 1.9885469549614615e+30 #lal.MSUN_SI
         M = M1 + M2
         Mu = M1*M2/M    # reduced mass in CMS
-        dist = 1.e6*lal.PC_SI*dist
+        dist = 1.e6* 3.085677581491367e+16 *dist #  lal.PC_SI*dist
         Mchirp = M**(2./5.)*Mu**(3./5.)   # chirp mass
         ht = np.sqrt(5*np.pi/24.)*G**2*Mchirp**2/(c**5*dist)* \
                 np.power(np.pi*G*Mchirp*ftheory/c**3,-7./6.)
@@ -55,8 +53,8 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
         #masses in SI units:
         c = 299792458.        # m/s
         G = 6.67384e-11       # m**3 / s**2 / kg = M1+M2   # total mass
-        M1 = m1inj * lal.MSUN_SI
-        M2 = m2inj * lal.MSUN_SI
+        M1 = m1inj * 1.9885469549614615e+30 #lal.MSUN_SI
+        M2 = m2inj * 1.9885469549614615e+30 #lal.MSUN_SI
         M = M1 + M2
         Mu = M1*M2/M    # reduced mass in CMS
         forb0 = f/2.
