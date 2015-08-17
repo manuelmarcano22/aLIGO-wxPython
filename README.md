@@ -1,7 +1,9 @@
 # aLIGO-wxPython
 Graphical User Interface for Gravitational Wave Data Analysis. 
 
-For an specific compact binary system of the same mass and at a given distance it calculates the Signal-to-Noise Ratio, Horizon Distance. Average Range, time to innermost stable circular orbits (ISCO), and time in View for three different detectors configuration (LIGO Hanford, LIGO Livingston and a Network of the two detectors). Three design parameters can be change: 1-Total Suspension Length, 2- Section Suspension Length and 3-Total mass of the suspension. Can select from 9 different masses, and 3 lengths for the total and section. To source parameters can be changed: 1-Mass of the two binaries, 2-Distance of the binaries. It plots and calculate the amplitude spectral density (ASD) from the Seismic, Suspension Thermal, Coating Brownian and Quantum Noise. 
+For an specific compact binary system of the same mass and at a given distance it calculates the Signal-to-Noise Ratio, Horizon Distance. Average Range, Time to innermost stable circular orbits (ISCO), and Time in view for three different detectors configuration (LIGO Hanford, LIGO Livingston and a Network of the two detectors). Three design parameters can be change: 1-Total Suspension Length, 2- Section Suspension Length and 3-Total mass of the suspension. Can select from 9 different masses, and 3 lengths for the total and section. Three source parameters can be changed: 1-Mass of the two binaries, 2-Distance of the binaries, 3-Position in the Sky (converted to earth longitude and latitude). It plots and calculate the amplitude spectral density (ASD) from the Seismic, Suspension Thermal, Coating Brownian and Quantum Noise. 
+
+The code have polarization angle of 0.343 and observation time of t0=9e8 (gps sec). 
 
 Prerequisite packages
 =======
