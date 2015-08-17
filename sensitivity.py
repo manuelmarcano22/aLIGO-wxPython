@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 import lal
+from antennamod import antenna_pattern
 import lalsimulation
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.basemap import Basemap
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.basemap import Basemap
 
 
 def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec):
@@ -12,8 +13,10 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     susp=np.loadtxt('datafiles/psus.txt')
     coat=np.loadtxt('datafiles/pcoat.txt')  
     seis=np.loadtxt('datafiles/pseismic.txt')
+    quan=np.loadtxt('datafiles/pquantum.txt')
     i=0
     freqrange = coat[i*(500+1):(1+i)*500,0]   
+    print 'l'
 
 #Calculate ISCO
     #masses in SI units:
@@ -65,34 +68,35 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
         #(2.19 en adV Detector)
         tchirp = 5./(256.*(Mu/M))*(G*M/c**3)/borb0**8   # chirp time
         return tchirp
-    
-    def antenna_response( t0, ra, dec, psi, det ):
-        gps = lal.LIGOTimeGPS( t0 )
-        gmst_rad = lal.GreenwichMeanSiderealTime(gps)
 
-        # create detector-name map
-        detMap = {'H1': lal.LALDetectorIndexLHODIFF, \
-                    'H2': lal.LALDetectorIndexLHODIFF, \
-                    'L1': lal.LALDetectorIndexLLODIFF, \
-                    'G1': lal.LALDetectorIndexGEO600DIFF, \
-                    'V1': lal.LALDetectorIndexVIRGODIFF, \
-                    'T1': lal.LALDetectorIndexTAMA300DIFF}
-
-        try:
-            detector=detMap[det]
-        except KeyError:
-            raise ValueError, "ERROR. Key %s is not a valid detector name." % (det)
-
-          # get detector
-        detval = lal.CachedDetectors[detector]
-
-        response = detval.response
-
-        # actual computation of antenna factors
-        fp, fc = lal.ComputeDetAMResponse(response, ra, dec, psi, gmst_rad)
-        return fp, fc  
-
-
+    #Using antennaMatt insted 
+#    def antenna_response( t0, ra, dec, psi, det ):
+#        gps = lal.LIGOTimeGPS( t0 )
+#        gmst_rad = lal.GreenwichMeanSiderealTime(gps)
+#
+#        # create detector-name map
+#        detMap = {'H1': lal.LALDetectorIndexLHODIFF, \
+#                    'H2': lal.LALDetectorIndexLHODIFF, \
+#                    'L1': lal.LALDetectorIndexLLODIFF, \
+#                    'G1': lal.LALDetectorIndexGEO600DIFF, \
+#                    'V1': lal.LALDetectorIndexVIRGODIFF, \
+#                    'T1': lal.LALDetectorIndexTAMA300DIFF}
+#
+#        try:
+#            detector=detMap[det]
+#        except KeyError:
+#            raise ValueError, "ERROR. Key %s is not a valid detector name." % (det)
+#
+#          # get detector
+#        detval = lal.CachedDetectors[detector]
+#
+#        response = detval.response
+#
+#        # actual computation of antenna factors
+#        fp, fc = lal.ComputeDetAMResponse(response, ra, dec, psi, gmst_rad)
+#        return fp, fc  
+#
+    ftotal =  antenna_pattern(det, np.radians(ra), np.radians(dec), psi, t0)
 
     if det == 0:
         det = 'H1'
@@ -101,11 +105,12 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     if det == 2.:
         det = 'H1'
     
-    apt, act = antenna_response(t0, np.radians(ra), np.radians(dec), psi, det)
+    #apt, act = antenna_response(t0, np.radians(ra), np.radians(dec), psi, det)
     htheory = htheory(m1inj,m2inj,dist,ftheory)
     
     # get GW strain at detector
-    h = htheory* np.sqrt(apt**2 + act**2)
+    #h = htheory* np.sqrt(apt**2 + act**2)
+    h = htheory * ftotal 
 
     #Get the noises:
     mm = np.arange(40.,220.,20.)
@@ -132,47 +137,10 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     seis = seis[i*(500):(1+i)*500,mm]   
     coat = coat[i*(500):(1+i)*500,mm]   
     susp = susp[i*(500):(1+i)*500,mm]   
-
-#Quantum Noise. It is Radiation Pressure low and in high. 
-##https://ligo-vcs.phys.uwm.edu/cgit/lalsuite/tree/lalsimulation/src/LALSimNoisePSD.c
-# * Provides the quantum noise power spectrum for aLIGO under the high-power
-# * broad-band signal recycling (no detuning of the signal recycling cavity).
-# *
-# * See: LIGO-T0900288-v3 and LIGO-T070247-01.
-# * This configuration is labelled Zero Detune, High Power.
-# */Parameters:
-    eta = 0.9
-    ds = 0.0
-    zeta = 116.0 * (np.pi/180.)
-    laser_pow = 125.#Laser Power Low or High SI
-    laser_wave = 1.064e-6#Wavelength
-    arm_length =  3995 #Meters
-    mirror_mass =  massdet #Kg
-    mirror_loss = 37.5e-6#Mirror Loss
-    beam_splitter_loss  = 0.002 
-    itm_trans =    0.014#I
-    prm_trans = 0.027#PRM
-    srm_trans = 0.2 #SRM
-
-
-
-    quantum=np.array([])
-    for i in np.arange(len(freqrange)):
-        temp = lalsimulation.SimNoisePSDQuantum(freqrange[i],
-                laser_pow,
-                laser_wave,
-                arm_length,
-                massdet,
-                mirror_loss,
-                beam_splitter_loss,
-                itm_trans,
-                prm_trans,
-                srm_trans,
-                ds, zeta, eta)
-        quantum = np.append(quantum, temp)
+    quan = quan[i*(500):(1+i)*500,mm]
 
 #ASD 
-    asd = np.sqrt(seis**2 + coat**2 + susp**2 + quantum)
+    asd = np.sqrt(seis**2 + coat**2 + susp**2 + quan**2)
 
 #Extra ASD:
 #    for i in np.arange(len(freqrange)):
@@ -181,14 +149,14 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #    asd = np.sqrt(asd)
 
     # get the SNR
-    freqidx = freqrange[freqrange < 100]
+    freqidx = freqrange[freqrange < 50]
     hidx =  h[0:len(freqidx)]
     idx = abs(abs(hidx*np.sqrt(freqrange[:len(hidx)])) - abs(asd[:len(hidx)]))
     idx = np.argmin(idx)
 
     idx2 = len(h)-1 
     if  fmaxhcode > 100:
-        freqidx2 = freqrange[freqrange > 100]
+        freqidx2 = freqrange[freqrange > 60]
         idx2 = np.where(freqrange == freqidx2[0])[0][0]
         temp = abs(abs(h[idx2:]*np.sqrt(freqrange[idx2:len(h)])) - abs(asd[idx2:len(h)]))
         temp = np.argmin(temp)
@@ -200,14 +168,18 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     deltaF =1.  #######PReguntar por esto
     snr1 = np.sqrt(4.*deltaF*np.vdot(hwhite1, hwhite1).real)
 
-    hwhite = h/asd[:len(h)] # whiten waveformi
-    #hwhite = h[idx:]/asd[idx:len(h)] # whiten waveformi
-    deltaF = freqrange[2]-freqrange[1]
+    #hwhite = h/asd[:len(h)] # whiten waveformi
+    hwhite = h[idx:]/asd[idx:len(h)] # whiten waveformi
+    hwhite = h[idx:idx2]/asd[idx:idx2] # whiten waveformi
+    #deltaF = freqrange[2]-freqrange[1]
     deltaF = 1.
     snr = np.sqrt(4.*deltaF*np.vdot(hwhite, hwhite).real)
 
-
-    timeelapsed = abs(tchirp(m1inj,m2inj,ftheory[idx])  - tchirp(m1inj,m2inj,ftheory[idx2]))
+    timeelapsed =0.
+    if snr > 2:
+        timeelapsed = abs(tchirp(m1inj,m2inj,ftheory[idx])  - tchirp(m1inj,m2inj,ftheory[idx2]))
+   
+    #timeelapsed = abs(tchirp(m1inj,m2inj,ftheory[147])  - tchirp(m1inj,m2inj,ftheory[idx2]))
     
     time_to_ISCO =  tchirp(m1inj,m2inj,ftheory[-1])        
     BNS_horizon = snr1/8. *dist
@@ -216,186 +188,4 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     #print 'mm %d' %mm
 
     return snr, h, asd, freqrange, ftheory, timeelapsed,seis, coat, \
-            susp, fGWI, idx, idx2, quantum, time_to_ISCO, BNS_horizon, ave_range
-##
-####
-##To test the routine. 
-##To call the FUnctions:
-#t0=900000000 #gps seconds
-#iota = 0. #(radians) Inclination
-#psi = 0.343 #(radians) Polarization angle
-#ra = 35.
-#dec = 35.
-#dist = 300.
-#m1inj = 1
-#m2inj = 1
-#det =0
-#fmaxhcode =  20 #5000000.
-#massdet = 40.
-#ltotal =  100*2.14 # 1.6#1.87# 2.14 #1.87   # 2.1
-#lsec = 100*1.1 #0.6
-#
-#snr1, h1, asd1, freqrange1, freqrangetheory, timee1, \
-#        seis1, coat1, susp1, fGWI ,idx,idx2, quantum1, tisco= \
-#        sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal,lsec)
-#
-##data = np.column_stack((freqrange1,quantum1))
-###for i in np.arange(40,120,20):
-###        snr1, h1, asd1, freqrange1, freqrangetheory, timee1, \
-###            seis1, coat1, susp1, fGWI ,idx,idx2, quantum1= \
-###            sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,i,ltotal,lsec)
-###        print i
-###        print quantum1[-10:]
-###        print freqrange1[-1]
-##
-#figure = plt.figure()
-###
-#subplot1 = figure.add_subplot(111)
-#
-#inset_ax = figure.add_axes([0.55,0.04,0.45,0.3] )
-#mapita = Basemap(projection='moll',lon_0 = 0)
-##, projection =ccrs.PlateCarree())
-####
-#subplot1.set_yscale('log')
-#subplot1.set_xscale('log')
-#
-##Text box for SNR
-#annotation_string = r'$SNR=%d$'%snr1
-#annotation_string +='\n'
-#annotation_string +=r'$t_{elapsed}=%f$'%timee1
-#text = subplot1.text(0.02,0.97, annotation_string,size=20 ,ha='left', va='top',\
-#        transform=subplot1.transAxes, \
-#        bbox = dict(boxstyle='round', ec=(1., 0.5, 0.5),\
-#                    fc=(1., 0.8, 0.8),))
-#
-#subplot1.set_ylim([1e-27, 1e-17])
-#subplot1.set_xlim([1, 2e4])
-#
-#subplot1.grid(True, which="both", ls="-", alpha=.5)
-#
-#subplot1.set_xlabel(r"$frequency, f(Hz)$", fontsize=18)
-#subplot1.set_ylabel(r"$S^{1/2}_h (f) \, (Hz^{-1/2})$",fontsize=18)
-#
-##coating Brownian, seismic, suspension thermal noise.
-#
-#
-#lines=[]
-#
-#
-#freqrange = np.arange(1,10001,1)
-#q=np.zeros(len(freqrange)+1)
-#
-#for i in freqrange:
-#        temp = lalsimulation.SimNoisePSDaLIGOQuantumZeroDetHighPower(i)
-#        q[i] = temp
-#
-##subplot1.plot(freqrange, np.sqrt(q[:len(freqrange)]))
-#subplot1.plot(freqrange1, asd1, \
-#        '-', label='Sensitivity Curve')
-#subplot1.plot(freqrange1,seis1,\
-#        '-',label='Seismic Noise')
-#subplot1.plot(freqrange1,susp1,\
-#        '-', label='Suspension Thermal Noise')
-#subplot1.plot(freqrange1,coat1,\
-#        '-', label='Coating Brownian Noise')
-#
-#subplot1.plot(freqrange1,np.sqrt(quantum1),\
-#        '-', label='Quantum Noise')
-#
-#subplot1.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
-#        '-', label='Effective Induced Strain')
-#
-#subplot1.legend(loc='best', fancybox=True, framealpha=0.5)
-#
-#try:
-#    subplot1.scatter(freqrangetheory[idx],h1[idx]*np.sqrt(freqrangetheory[idx]),c='r',s=500,marker='*')
-#    subplot1.scatter(freqrangetheory[idx2],h1[idx2]*np.sqrt(freqrangetheory[idx2]),color='b',s=100)
-#except:
-#    print 'no se pudo'
-##mapita.drawcoastlines()
-#
-#x,y = mapita(ra,dec)
-#mapita.scatter(x,y,color='r')
-#mapita.bluemarble(scale=.2)
-#inset_ax = figure.add_axes([0.55,0.04,0.45,0.3] )
-#
-##Antenna Pathern:
-#def antenna_response( t0, ra, dec, psi, det ):
-#    gps = lal.LIGOTimeGPS( t0 )
-#    gmst_rad = lal.GreenwichMeanSiderealTime(gps)
-#
-#    # create detector-name map
-#    detMap = {'H1': lal.LALDetectorIndexLHODIFF, \
-#    'H2': lal.LALDetectorIndexLHODIFF, \
-#    'L1': lal.LALDetectorIndexLLODIFF, \
-#    'G1': lal.LALDetectorIndexGEO600DIFF, \
-#    'V1': lal.LALDetectorIndexVIRGODIFF, \
-#    'T1': lal.LALDetectorIndexTAMA300DIFF}
-#
-#    try:
-#        detector=detMap[det]
-#    except KeyError:
-#        raise ValueError, "ERROR. Key %s is not a valid detector name." % (det)
-#
-#    # get detector
-#    detval = lal.CachedDetectors[detector]
-#
-#    response = detval.response
-#
-#    # actual computation of antenna factors
-#    fp, fc = lal.ComputeDetAMResponse(response, ra, dec, psi, gmst_rad)
-#    ft = np.sqrt(fp**2 + fc**2)
-#    return ft
-#t0=900000000 #gps seconds
-#psi = 0#0.343 #(radians) Polarization angle
-#det = 'H1'
-#
-#
-#Xlista = np.arange(0,360.,1.)
-#Ylista = np.arange(-90.,90.,1.)
-#Z = np.array([])
-#
-#
-#for i in Ylista:
-#    for j in Xlista:
-#        ztemp = antenna_response(t0, np.radians(j),np.radians(i), psi, det ) 
-#        Z = np.append(Z,ztemp)
-#
-#X = np.arange(-180,180.,1.)
-#Y = np.arange(-90.,90.,1.)
-#X, Y = np.meshgrid(X,Y)
-#Z = np.reshape(Z, X.shape)
-###np.savetxt('L1antenna.out',Z)
-###Z = np.loadtxt('datafiles/L1antenna.out')
-###Contour
-#im1 = mapita.pcolormesh(X,Y,Z,shading='flat',cmap=plt.cm.jet,latlon=True)
-#mapita.drawcoastlines()
-##
-###For back to bluemarble
-###xnot = np.zeros([5,5])
-###im1.set_array(xnot)
-###mapita.bluemarble(scale=.2)
-##
-##
-##
-##
-###, projection =ccrs.PlateCarree())
-###scatter = inset_ax.scatter(ra, dec,c='r',transform=ccrs.PlateCarree())
-###scatter = inset_ax.scatter(0,0,transform=ccrs.PlateCarree()) 
-###inset_ax.coastlines()
-###inset_ax.gridlines(crs=ccrs.PlateCarree())
-###        ,transform=ccrs.PlateCarree())
-###inset_ax.plot(ra,dec,transform=ccrs.PlateCarree())
-###fre10 = int(np.where(freqrange1 == 10.)[0])
-###print 'at %d  is %d' %fre10 %susp1[fre10]
-###figure = plt.figure()
-###subplot2 = figure.add_subplot(111)
-###subplot2.plot(freqrangetheory,h1*np.sqrt(freqrangetheory),\
-###        '-', label='Effective Induced Strain')
-###subplot2.set_yscale('log')
-###subplot2.set_xscale('log')
-###        
-###        True , which="both", ls="-", alpha=.5)
-#plt.show()
-###
-##
+            susp, fGWI, idx, idx2, quan, time_to_ISCO, BNS_horizon, ave_range
