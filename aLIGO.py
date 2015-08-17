@@ -1,18 +1,13 @@
 #!/usr/bin/env python
 
 """
-wxPython code to compute the SNR using LIGO data for Seismic, Coating and Suspension Noise.
-Also computes the SNR for a given binary with equal masses at a particular distance. 
-Y con calendario. 
+wxPython code to compute the SNR using LIGO data for Seismic, Coating, Quantum and Suspension Noise. Also computes the SNR for a given binary with equal masses at a particular distance. 
+The Horizon Distance, time to ISCO, Average range, and time in view in the detector. 
 """
 
 import numpy as np
-import time
 import wx
-import wx.calendar as cal
-from wx.lib.masked import TimeCtrl
 from sensitivity import sensitivity
-import os
 import matplotlib
 matplotlib.interactive(False)
 matplotlib.use('WXAgg')
@@ -242,9 +237,9 @@ class FourierDemoFrame(wx.Frame):
         self.menubar = wx.MenuBar()
         
         menu_file = wx.Menu()
-        m_expt = menu_file.Append(-1, "&Save plot\tCtrl-S", "Save plot to file")
-        self.Bind(wx.EVT_MENU, self.on_save_plot, m_expt)
-        menu_file.AppendSeparator()
+#        m_expt = menu_file.Append(-1, "&Save plot\tCtrl-S", "Save plot to file")
+#        self.Bind(wx.EVT_MENU, self.on_save_plot, m_expt)
+#        menu_file.AppendSeparator()
         m_exit = menu_file.Append(-1, "E&xit\tCtrl-X", "Exit")
         self.Bind(wx.EVT_MENU, self.on_exit, m_exit)
         
@@ -265,21 +260,22 @@ class FourierDemoFrame(wx.Frame):
         self.SetMenuBar(self.menubar)
 
 
-    def on_save_plot(self, event):
-        file_choices = "PNG (*.png)|*.png"
-        
-        dlg = wx.FileDialog(
-            self, 
-            message="Save plot as...",
-            defaultDir=os.getcwd(),
-            defaultFile="plot.png",
-            wildcard=file_choices,
-            style=wx.SAVE)
-        
-        if dlg.ShowModal() == wx.ID_OK:
-            path = dlg.GetPath()
-            self.fourierDemoWindow.canvas.print_figure(path, dpi=10000)
-            #self.flash_status_message("Saved to %s" % path)
+#Can do it with Python Navigation Bar
+#    def on_save_plot(self, event):
+#        file_choices = "PNG (*.png)|*.png"
+#        
+#        dlg = wx.FileDialog(
+#            self, 
+#            message="Save plot as...",
+#            defaultDir=os.getcwd(),
+#            defaultFile="plot.png",
+#            wildcard=file_choices,
+#            style=wx.SAVE)
+#        
+#        if dlg.ShowModal() == wx.ID_OK:
+#            path = dlg.GetPath()
+#            self.fourierDemoWindow.canvas.print_figure(path, dpi=10000)
+#            #self.flash_status_message("Saved to %s" % path)
         
     def on_exit(self, event):
         self.Destroy()
@@ -302,24 +298,25 @@ class FourierDemoFrame(wx.Frame):
     def on_map(self, event):
         pub.sendMessage('detmapchanged' , newmap = 0.)#,newdet =0.  ,newmap = 0.)      
 
-class calendar(Knob):
-    def __init__(self,parent):
-        a = wx.DatePickerCtrl(parent,id=-1, name='datee')
-        b= TimeCtrl(parent, id=-1, value='02:00:00')
-        self.date_label = wx.StaticText(parent, label='Date and Time')
-        
-        self.cal = a
-        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer1.Add(self.cal)
-        sizer1.Add(b)
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.date_label, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=2)
-        sizer.Add(sizer1, 1, wx.EXPAND)
-        self.sizer = sizer
-        
-        self.cal.Bind(wx.EVT_DATE_CHANGED, self.OnDateChanged, id=a.GetId())
-        
+#If want to add the time dependence
+#class calendar(Knob):
+#    def __init__(self,parent):
+#        a = wx.DatePickerCtrl(parent,id=-1, name='datee')
+#        b= TimeCtrl(parent, id=-1, value='02:00:00')
+#        self.date_label = wx.StaticText(parent, label='Date and Time')
+#        
+#        self.cal = a
+#        sizer1 = wx.BoxSizer(wx.HORIZONTAL)
+#        sizer1.Add(self.cal)
+#        sizer1.Add(b)
+#        
+#        sizer = wx.BoxSizer(wx.VERTICAL)
+#        sizer.Add(self.date_label, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, border=2)
+#        sizer.Add(sizer1, 1, wx.EXPAND)
+#        self.sizer = sizer
+#        
+#        self.cal.Bind(wx.EVT_DATE_CHANGED, self.OnDateChanged, id=a.GetId())
+#        
     
     def OnDateChanged(self, evt):
 #        self("OnDateChanged: %s\n" % evt.GetDate())
@@ -458,10 +455,13 @@ class FourierDemoWindow(wx.Window, Knob):
                 mapita.drawcoastlines()
           
             if self.detector.value == 2.:
+                Z1 = np.loadtxt('datafiles/H1antenna.out')
+                Z2 = np.loadtxt('datafiles/L1antenna.out')
+                Z = Z1 + Z2
+                im1 = mapita.pcolormesh(X,Y,Z, shading='flat',\
+                        cmap=matplotlib.cm.jet,latlon=True)
                 self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
-                mapita.ax.clear() 
-                mapita.bluemarble(scale=.1)
-                self.scatter = mapita.scatter(self.raplot, self.decplot,c='r',marker='*',s=100)
+                mapita.drawcoastlines()
 
 
         if newmap ==0.:
