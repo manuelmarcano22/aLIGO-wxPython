@@ -14,7 +14,6 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     quan=np.loadtxt('datafiles/pquantum.txt')
     i=0
     freqrange = coat[i*(500+1):(1+i)*500,0]   
-    print 'l'
 
 #Calculate ISCO
     #masses in SI units:
