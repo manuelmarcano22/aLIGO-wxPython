@@ -28,7 +28,7 @@ Gallery
 
 Future Work
 =======
-*Include gravity gradient noise
-*Include time as a parameters
-*More datapoints
+* Include gravity gradient noise
+* Include time as a parameters
+* More datapoints
 
