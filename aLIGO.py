@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 """
-wxPython code to compute the SNR using LIGO data for Seismic, Coating, Quantum and Suspension Noise. Also computes the SNR for a given binary with equal masses at a particular distance. 
+wxPython code to compute the SNR using LIGO data for Seismic, Coating, Quantum and Suspension Noise.
+Also computes the SNR for a given binary with equal masses at a particular distance. 
 The Horizon Distance, time to ISCO, Average range, and time in view in the detector. 
 """
 
@@ -281,13 +282,14 @@ class FourierDemoFrame(wx.Frame):
         self.Destroy()
         
     def on_about(self, event):
-        msg = """ A demo using wxPython with matplotlib:
-         * Calculate the Sensitivity Curve iLIGO
-         * Save the plot to a file using the File menu
-         * It is Stationary phased approximation
-         * L4 is the seccion Lenght
-         * LTotal
-        """
+        msg = \
+            """ A demo using wxPython with matplotlib:
+             * Calculate the Sensitivity Curve LIGO.
+             * L4 is the section ;enght of Suspension
+             * LTotal is the total lenght of the Suspension
+             * mass det is the total mass of the Mirror
+             * H1 is Harford, L1 Livingston and HL network
+            """
         dlg = wx.MessageDialog(self, msg, "About", wx.OK)
         dlg.ShowModal()
         dlg.Destroy()
