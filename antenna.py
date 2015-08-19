@@ -56,7 +56,7 @@ t = Time(t0, format='gps')
 gmst = t.sidereal_time('mean','greenwich').rad
 lst = t.sidereal_time('mean',longitude=str(360-np.degrees(lde))+'d')
 print 'in ', t.isot
-print 'max at (ra, dec), delta:', 180-lst.deg, np.degrees(Lambda), ((180-lst.deg)-np.degrees(lde) )
+print 'max at (ra, dec), delta:', lst.rad, np.degrees(Lambda), ((180-lst.deg)-np.degrees(lde) )
 
 Xlista = np.arange(0,360.,1.)
 Ylista = np.arange(-90.,90.,1.)
