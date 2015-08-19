@@ -33,9 +33,6 @@ Prerequisite packages
 * [Matplotlib](http://matplotlib.org/)
 * [Basemap](http://matplotlib.org/basemap/)
 * [wxPython](http://www.wxpython.org/)
-<!---
-* [Astropy](http://www.astropy.org/)
--->
 
 Usage:
 =======
