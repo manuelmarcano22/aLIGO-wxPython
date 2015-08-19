@@ -1,5 +1,5 @@
 # aLIGO-wxPython
-Graphical User Interface for Gravitational Wave Data Analysis. 
+**Graphical User Interface for Gravitational Wave Data Analysis.**
 
 For an specific compact binary system of the same mass and at a given distance it calculates the Signal-to-Noise Ratio, Horizon Distance. Average Range, Time to innermost stable circular orbits (ISCO), and Time in view for three different detectors configuration (LIGO Hanford, LIGO Livingston and a Network of the two detectors). For the fist prototype of the GUI we will only consider the effect of changing the suspension design parameters. Advanced LIGO has a quadruple suspension and we can change three important things on the Suspension:
 
@@ -14,12 +14,12 @@ Four source parameters can also be changed:
 * Position of the source (converted to Earth-fixed coordinates)
 * Maximun Gravitational Wave frequency
 
-It plots and calculate the amplitude spectral density (ASD) from the Seismic, Suspension Thermal, Coating Brownian and Quantum Noise. 
+It plots and calculate the effective induced strain and amplitude spectral density (ASD) from the Seismic, Suspension Thermal, Coating Brownian and Quantum Noise.
 
 
 Assumptions
 ======= 
-The code assumes polarization angle of 0.343, observation time at t0=9e8 (gps sec), and inclination of 0 (best scenario). It is a stationary phase approximation. Assumes no spinning binaries in a circular orbit. 
+The code assumes polarization angle of 0.343, observation time at t0=9e8 (gps sec), and inclination of 0 (best scenario). It is a stationary phase approximation and assumes no spinning binaries in a circular orbit. 
 
 Prerequisite packages
 =======
@@ -44,7 +44,7 @@ To execute clone the git repository and run the main program aLIGO:
 
 Report:
 =======
-Find a short report on the project on the report folder. **Warning:It is a work in progress and not completed the report**
+Find a short report on the project on the report folder. **Warning: It is a work in progress and the report is not complete**
 
 
 Gallery
