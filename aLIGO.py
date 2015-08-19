@@ -4,6 +4,7 @@
 wxPython code to compute the SNR using LIGO data for Seismic, Coating, Quantum and Suspension Noise.
 Also computes the SNR for a given binary with equal masses at a particular distance. 
 The Horizon Distance, time to ISCO, Average range, and time in view in the detector. 
+Based on example found at (http://wiki.wxpython.org/MatplotlibFourierDemo)
 """
 
 import numpy as np
@@ -23,24 +24,10 @@ from mpl_toolkits.basemap import Basemap
 
 
 class Knob:
-    """
-    Knob - simple class with a "setKnob" method.  
-    A Knob instance is attached to a Param instance, e.g. param.attach(knob)
-    Base class is for documentation purposes.
-    """
     def setKnob(self, value):
         pass
 
 class Param:
-    """
-    The idea of the "Param" class is that some parameter in the GUI may have
-    several knobs that both control it and reflect the parameter's state, e.g.
-    a slider, text, and dragging can all change the value of the frequency in
-    the waveform of this example.  
-    The class allows a cleaner way to update/"feedback" to the other knobs when 
-    one is being changed.  Also, this class handles min/max constraints for all
-    the knobs.
-    """
     def __init__(self, initialValue=None, lista=np.linspace(0,1,1000)):
         self.minimum = round(min(lista))
         self.maximum = round(max(lista))
