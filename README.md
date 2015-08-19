@@ -1,12 +1,25 @@
 # aLIGO-wxPython
 Graphical User Interface for Gravitational Wave Data Analysis. 
 
-For an specific compact binary system of the same mass and at a given distance it calculates the Signal-to-Noise Ratio, Horizon Distance. Average Range, Time to innermost stable circular orbits (ISCO), and Time in view for three different detectors configuration (LIGO Hanford, LIGO Livingston and a Network of the two detectors). Three design parameters can be change: 1-Total Suspension Length, 2- Section Suspension Length and 3-Total mass of the suspension. Can select from 9 different masses, and 3 lengths for both the total and section length. Four source parameters can be changed: 1-Mass of the two binaries, 2-Distance of the binaries, 3-Position in the Sky (converted to earth longitude and latitude), 4-Maximun gravitaional wave (GW) frequency (GW freq. is twice the orbital frequency). It plots and calculate the amplitude spectral density (ASD) from the Seismic, Suspension Thermal, Coating Brownian and Quantum Noise. 
+For an specific compact binary system of the same mass and at a given distance it calculates the Signal-to-Noise Ratio, Horizon Distance. Average Range, Time to innermost stable circular orbits (ISCO), and Time in view for three different detectors configuration (LIGO Hanford, LIGO Livingston and a Network of the two detectors). For the fist prototype of the GUI we will only consider the effect of changing the suspension design parameters. Advanced LIGO has a quadruple suspension and we can change three important things on the Suspension:
+
+* Total mass of the suspension. 9 possible masses from 40 kg to 120 kg
+* Total length. 3 possible configurations (1.6, 1.87 and 2.14 meters).
+* Sections length (ribbons). Also 3 possibilities (0.6, 0.85 and 1.1 meters).
+
+Four source parameters can also be changed: 
+
+* Mass of the two binaries
+* Distance of the binaries
+* Position of the source (converted to Earth-fixed coordinates)
+* Maximun Gravitational Wave frequency
+
+It plots and calculate the amplitude spectral density (ASD) from the Seismic, Suspension Thermal, Coating Brownian and Quantum Noise. 
 
 
 Assumptions
 ======= 
-The code assumes polarization angle of 0.343, observation time at t0=9e8 (gps sec), and inclination of 0 (best scenario). It is a stationary phase approximation.
+The code assumes polarization angle of 0.343, observation time at t0=9e8 (gps sec), and inclination of 0 (best scenario). It is a stationary phase approximation. Assumes no spinning binaries in a circular orbit. 
 
 Prerequisite packages
 =======
@@ -28,6 +41,12 @@ Usage:
 To execute clone the git repository and run the main program aLIGO:
 * `python aLIGO.py`
 
+
+Report:
+=======
+Find a short report on the project on the report folder. **Warning:It is a work in progress and not completed the report**
+
+
 Gallery
 =======
 
@@ -39,6 +58,8 @@ Future Work
 =======
 * Include gravity gradient noise
 * Include time as a parameters
-* More datapoints
-* Include signal after ISCO
+* More datapoints for the sliders
+* Include contribution to SNR beyond ISCO
+* Inclination as parameter or randomize
+* Include eccentric and spinning binaries
 
