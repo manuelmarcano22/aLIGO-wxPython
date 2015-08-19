@@ -523,7 +523,7 @@ class FourierDemoWindow(wx.Window, Knob):
             valuey = (event.ydata)#*(180./np.pi)
             valuex, valuey = mapita3(valuex,valuey ,inverse=True )
             self.ra.set(valuex   ); self.dec.set(valuey)
-            print 'ra and dec',self.ra.value  , self.dec.value
+            #print 'ra and dec',self.ra.value  , self.dec.value
 
     def draw(self):
         if not hasattr(self, 'subplot1'):
@@ -538,7 +538,7 @@ class FourierDemoWindow(wx.Window, Knob):
         #Call to Functionn
         t0=900001970 #gps seconds
         iota = 0. #(radians)
-        psi = 0.343 #(radians)
+        psi = 0 #0.343 #(radians)
         #print np.radians(self.ra.value+180.), np.radians(self.dec.value)
         snr1, h1, asd1, freqrange1, freqrangetheory, timee1,\
                 seis1, coat1, susp1, fGWI, idx1,idx2, quantum1, tisco, hordist, averange = \
@@ -619,7 +619,7 @@ class FourierDemoWindow(wx.Window, Knob):
        #Call to Function
         t0=900001970 #gps seconds where max at Harford. 
         iota = 0. #(radians)
-        psi = 0.343 #(radians)
+        psi = 0 # 0.343 #(radians)
 
         if self.detector.value == 2.:
 
