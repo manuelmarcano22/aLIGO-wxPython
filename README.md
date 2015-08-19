@@ -19,7 +19,7 @@ It plots and calculate the effective induced strain and amplitude spectral densi
 
 Assumptions
 ======= 
-The code assumes polarization angle of 0.343, observation time at t0=9e8 (gps sec), and inclination of 0 (best scenario). It is a stationary phase approximation and assumes no spinning binaries in a circular orbit. 
+The code assumes polarization angle of 0., observation time at t0=9e8 (gps sec), and inclination of 0 (best scenario). It is a stationary phase approximation and assumes no spinning binaries in a circular orbit. 
 
 Prerequisite packages
 =======
@@ -33,8 +33,9 @@ Prerequisite packages
 * [Matplotlib](http://matplotlib.org/)
 * [Basemap](http://matplotlib.org/basemap/)
 * [wxPython](http://www.wxpython.org/)
+<!---
 * [Astropy](http://www.astropy.org/)
-
+-->
 
 Usage:
 =======
