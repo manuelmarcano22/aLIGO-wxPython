@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from astropy.time import Time
+#from astropy.time import Time
 import numpy as np
 
 def antenna_pattern(det, ra, dec, psi, t):
@@ -28,9 +28,10 @@ def antenna_pattern(det, ra, dec, psi, t):
 
     #Get local sideral time
     #Convert gps time to LST
-    t = Time(t, format='gps')
-    gmst = t.sidereal_time('mean','greenwich').rad
-    lst = t.sidereal_time('mean',longitude=str(360-np.degrees(lde))+'d').rad
+#    t = Time(t, format='gps')
+#    gmst = t.sidereal_time('mean','greenwich').rad
+#    lst = t.sidereal_time('mean',longitude=str(360-np.degrees(lde))+'d').rad
+    lst = 1.5586
     #Convert to GMST from greewich:
     #lst = divmod(gmst-lde,2*np.pi)[1]
     gamma2 = 2 * gamma
