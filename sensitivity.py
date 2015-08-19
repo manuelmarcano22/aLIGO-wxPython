@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from antennamod import antenna_pattern
 import numpy as np
+#import lalsimulation
 #import matplotlib.pyplot as plt
 #from mpl_toolkits.basemap import Basemap
 
@@ -139,12 +140,12 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
 #ASD 
     asd = np.sqrt(seis**2 + coat**2 + susp**2 + quan**2)
 
-#Extra ASD:
+##Extra ASD:
 #    for i in np.arange(len(freqrange)):
 #        asd[i] = lalsimulation.SimNoisePSDAdvVirgo(freqrange[i])
 #        asd[i] = lalsimulation.SimNoisePSDaLIGONSNSOpt(freqrange[i])
 #    asd = np.sqrt(asd)
-
+#
     # get the SNR
     freqidx = freqrange[freqrange < 50]
     hidx =  h[0:len(freqidx)]
