@@ -4,6 +4,7 @@ import lalsimulation
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+from astropy.time import Time
 
 
 def antenna_response( t0, ra, dec, psi, det ):
@@ -32,10 +33,30 @@ def antenna_response( t0, ra, dec, psi, det ):
     fp, fc = lal.ComputeDetAMResponse(response, ra, dec, psi, gmst_rad)
     ft = np.sqrt(fp**2 + fc**2)
     return ft
-t0=900000000 #gps seconds
-psi = 0#0.343 #(radians) Polarization angle
-det = 'H1'
+    
+t0=900001970 #gps seconds
+det = 'L1'
 
+#Hanford
+if det =='H1':
+    Lambda = np.pi * 46.45 / 180; # latitude
+    gamma = np.pi * 171.8 / 180; # orientation of arms
+    lde = np.pi * 119.41 / 180;  # longitude 
+    xi = np.pi / 2; # angle between arms
+#Livinsgton
+if det == 'L1':
+    Lambda = np.pi * 30.56 / 180; # latitude
+    gamma = np.pi * 243.0 / 180; # orientation of arms
+    lde = np.pi * 90.77 / 180; # longitude
+    xi = np.pi / 2; # angle between arms
+
+
+psi = 0#0.343 #(radians) Polarization angle
+t = Time(t0, format='gps')
+gmst = t.sidereal_time('mean','greenwich').rad
+lst = t.sidereal_time('mean',longitude=str(360-np.degrees(lde))+'d')
+print 'in ', t.isot
+print 'max at (ra, dec), delta:', 180-lst.deg, np.degrees(Lambda), ((180-lst.deg)-np.degrees(lde) )
 
 Xlista = np.arange(0,360.,1.)
 Ylista = np.arange(-90.,90.,1.)
