@@ -378,8 +378,8 @@ class FourierDemoWindow(wx.Window, Knob):
         self.ltotal = Param(1.6*100, lista = 100*np.array([1.6,1.87,2.14]))
 
         #FOr Mass and Distance
-        self.mass = Param(4., lista =np.arange(1,11,.1) )
-        self.dist = Param(100.,  lista=np.arange(10,10000,10)) 
+        self.mass = Param(30., lista =np.arange(20,50,5.) )
+        self.dist = Param(500.,  lista=np.arange(500,10000,10)) 
        
         self.detector = Param(0., lista=np.array([0.,1.,2.]) )
         

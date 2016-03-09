@@ -153,7 +153,7 @@ def sensitivity(t0,ra,dec,iota,psi,dist,m1inj,m2inj,det,fmaxhcode,massdet,ltotal
     idx = np.argmin(idx)
 
     idx2 = len(h)-1 
-    if  fmaxhcode > 100:
+    if  fmaxhcode > 100 and fGWI > 100:
         freqidx2 = freqrange[freqrange > 60]
         idx2 = np.where(freqrange == freqidx2[0])[0][0]
         temp = abs(abs(h[idx2:]*np.sqrt(freqrange[idx2:len(h)])) - abs(asd[idx2:len(h)]))
